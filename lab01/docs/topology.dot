@@ -1,0 +1,11 @@
+digraph bgp01 {
+    graph [bgcolor="transparent", rankdir=LR, pad="0.28", nodesep="1.4", splines=polyline,
+           fontname="DejaVu Sans", label="BGP-01  |  FRRouting on Containerlab", labelloc=t,
+           fontsize=18, fontcolor="#167385"];
+    node  [shape=box, style="rounded,filled", fillcolor="#17324B", fontcolor="white",
+           fontname="DejaVu Sans", fontsize=15, margin="0.3,0.24", color="#496B87", penwidth=1.5];
+    edge [fontname="DejaVu Sans", fontcolor="#136B70", fontsize=13, color="#0E999A", penwidth=3.3];
+    R1 [label="R1  |  FRRouting\nAS 65001\neth1: 10.0.12.1/30\nlo: 192.0.2.1/32"];
+    R2 [label="R2  |  FRRouting\nAS 65002\neth1: 10.0.12.2/30\nlo: 198.51.100.1/32"];
+    R1 -> R2 [dir=both, arrowhead=none, arrowtail=none, label="eBGP  |  TCP/179\neth1 - eth1", minlen=2];
+}

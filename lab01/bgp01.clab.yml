@@ -1,0 +1,21 @@
+name: bgp01
+
+topology:
+  kinds:
+    frr:
+      image: quay.io/frrouting/frr:containerlab-10.7.1
+      daemons:
+        - bgpd
+
+  nodes:
+    r1:
+      kind: frr
+      startup-config: ./r1/frr.conf
+      enforce-startup-config: true
+    r2:
+      kind: frr
+      startup-config: ./r2/frr.conf
+      enforce-startup-config: true
+
+  links:
+    - endpoints: ["r1:eth1", "r2:eth1"]
