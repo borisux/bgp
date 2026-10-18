@@ -1,8 +1,8 @@
 # BGP-01 — Primul laborator eBGP (FRRouting + Containerlab)
 
-**Nivel:** începător · **Mediu:** Proxmox → Ubuntu Server 24.04 → Docker → Containerlab → FRRouting · **Scop:** sesiune eBGP între două AS-uri, schimb de prefixe /32, verificarea rutelor în Linux și troubleshooting.
+**Nivel:** începător · **Mediu:** Proxmox → Debian 12/13 sau Ubuntu Server 24.04 VM → Docker → Containerlab → FRRouting · **Scop:** sesiune eBGP între două AS-uri, schimb de prefixe /32, verificarea rutelor în Linux și troubleshooting.
 
-Acest repository este pregătit pentru **GitHub și deploy automat**. După ce Ubuntu, Docker și Containerlab sunt instalate, trebuie doar să clonezi repository-ul și să rulezi **`make up`**. Routerele sunt pornite, configurate și verificate automat. Nu trebuie să introduci manual configurația BGP.
+Acest repository este pregătit pentru **GitHub și deploy automat**. După ce Debian/Ubuntu, Docker și Containerlab sunt instalate, trebuie doar să clonezi repository-ul și să rulezi **`make up`**. Routerele sunt pornite, configurate și verificate automat. Nu trebuie să introduci manual configurația BGP.
 
 > **Ce înseamnă „totul UP”?** `make up` verifică dacă ambele containere rulează, sesiunile eBGP sunt **Established**, ambele /32-uri sunt instalate în tabela Linux și ping-ul între loopback-uri funcționează. Dacă testele eșuează, scriptul se oprește cu cod de eroare și oferă informații pentru diagnostic. Nu presupune succesul doar pentru că Docker a pornit containerele.
 
@@ -48,7 +48,7 @@ BGP-01-Lab/
 ├── check.sh                   # Validare live BGP + RIB/kernel + ping
 ├── Makefile                   # make install/up/check/r1/r2/down
 ├── scripts/
-│   ├── install-host.sh        # Instalare prerechizite pe Ubuntu
+│   ├── install-host.sh        # Instalare prerechizite pe Debian/Ubuntu VM
 │   ├── deploy.sh              # Deploy Containerlab + validare automată
 │   └── static_lint.py         # Verificare statică fără Docker
 ├── docs/
@@ -56,6 +56,7 @@ BGP-01-Lab/
 │   ├── topology.dot           # Sursa Graphviz a schemei
 │   ├── topology.mmd           # Schema editabilă în Mermaid
 │   └── MANUAL-CONFIG.md       # Configurarea explicată, comandă cu comandă
+├── tests/test-preflight.sh      # Regressions: Debian/Ubuntu VM vs Proxmox host
 ├── .github/workflows/lint.yml # GitHub Actions: validare statică
 └── .gitignore                # Nu urcăm în Git fișierele generate de Containerlab
 ```
@@ -67,16 +68,16 @@ Creează o **VM nouă**, separată de clusterul Kubernetes/Talos sau alte servic
 | Setare | Recomandare |
 |---|---|
 | Nume VM | `bgp-lab` |
-| Guest OS | Ubuntu Server 24.04 LTS |
+| Guest OS | Debian 12/13 sau Ubuntu Server 24.04 LTS |
 | vCPU | 4, CPU type `host` |
 | RAM | 8 GB (pentru primul lab FRR) |
 | Disk | 60 GB, SCSI/VirtIO |
 | Network | VirtIO, pe `vmbr0` cu acces Internet |
 | Guest Agent | QEMU Guest Agent (după instalarea în VM) |
 
-Urmează instalarea standard Ubuntu și creează un utilizator cu drepturi `sudo`. Configurează accesul SSH și IP-ul VM-ului conform rețelei tale.
+Urmează instalarea standard Debian/Ubuntu și creează un utilizator cu drepturi `sudo`. Configurează accesul SSH și IP-ul VM-ului conform rețelei tale.
 
-În Ubuntu, verifică Internetul și DNS:
+În VM-ul Debian/Ubuntu, verifică Internetul și DNS:
 
 ```bash
 hostnamectl
@@ -86,17 +87,18 @@ ping -c 3 1.1.1.1
 getent hosts containerlab.dev
 ```
 
-**Nu instala containerele de routing direct pe nodul Proxmox.** Lucrăm exclusiv în VM.
+**Nu instala Docker/Containerlab direct pe nodul Proxmox.** Hypervisorul Proxmox are la bază Debian, de aceea `/etc/os-release` poate raporta `ID=debian` atât pe host, cât și într-un guest Debian. Installerul verifică și blochează rularea pe hostul Proxmox și într-un container LXC/Docker; laboratorul se instalează doar într-o VM.
 
 ## 4. Instalarea Docker și Containerlab (o singură dată)
 
-Metoda recomandată dacă ai clonat deja acest repo în VM:
+Metoda recomandată dacă ai clonat deja acest repo într-o VM Debian/Ubuntu:
 
 ```bash
-make install
+make preflight  # verifică OS și blochează hostul Proxmox / LXC; nu instalează nimic
+make install    # instalează utilitare și componentele Docker/Containerlab lipsă
 ```
 
-Scriptul `scripts/install-host.sh` instalează utilitarele, apoi folosește instalatorul oficial Containerlab pentru Docker și Containerlab, dacă nu sunt instalate. Dezactivează modificările automate ale configurației `sshd` prin `SETUP_SSHD=false`.
+Scriptul `scripts/install-host.sh` acceptă **Debian și Ubuntu** și instalează utilitarele, apoi folosește instalatorul oficial Containerlab *separat pentru componentele lipsă*. Dacă Docker există deja, nu îl reinstalează. Dezactivează modificările automate ale configurației `sshd` prin `SETUP_SSHD=false`. Nu îl executa pe hypervisorul Proxmox; pe acel sistem preflight-ul returnează eroare intenționat.
 
 **Alternativ, comenzile manuale** (fără scriptul nostru):
 
@@ -106,7 +108,8 @@ sudo apt install -y curl git make jq vim tcpdump traceroute \
     iproute2 iputils-ping unzip util-linux python3 python3-yaml qemu-guest-agent
 sudo systemctl enable --now qemu-guest-agent
 export SETUP_SSHD=false
-curl -fsSL https://containerlab.dev/setup | sudo -E bash -s all
+curl -fsSL https://containerlab.dev/setup | sudo -E bash -s install-docker
+curl -fsSL https://containerlab.dev/setup | sudo -E bash -s install-containerlab
 sudo systemctl is-active docker
 sudo docker --version
 containerlab version
@@ -136,7 +139,7 @@ git push -u origin main
 
 ## 6. Clonează pe VM și pornește automat
 
-După publicarea în GitHub, conectează-te prin SSH pe VM Ubuntu:
+După publicarea în GitHub, conectează-te prin SSH pe VM Debian/Ubuntu:
 
 ```bash
 sudo apt update && sudo apt install -y git make  # doar dacă lipsesc
@@ -146,7 +149,7 @@ git clone https://github.com/UTILIZATORUL_TAU/bgp-01-lab.git
 cd bgp-01-lab
 ```
 
-Dacă este prima utilizare a VM-ului, execută `make install`. Apoi, **o singură comandă pornește și validează complet laboratorul**:
+Dacă este prima utilizare a VM-ului, execută `make preflight` și apoi `make install`. Apoi, **o singură comandă pornește și validează complet laboratorul**:
 
 ```bash
 make up
@@ -251,14 +254,14 @@ Pe scurt:
 
 ## 10. Captură BGP, fără unelte suplimentare în container
 
-Un terminal Ubuntu — tcpdump pe `eth1` din network namespace R1:
+Un terminal Debian/Ubuntu — tcpdump pe `eth1` din network namespace R1:
 
 ```bash
 PID=$(sudo docker inspect -f '{{.State.Pid}}' clab-bgp01-r1)
 sudo nsenter -t "$PID" -n tcpdump -ni eth1 -vv 'tcp port 179'
 ```
 
-Alt terminal Ubuntu — restartează doar sesiunea BGP din laborator:
+Alt terminal Debian/Ubuntu — restartează doar sesiunea BGP din laborator:
 
 ```bash
 sudo docker exec clab-bgp01-r1 vtysh -c 'clear bgp 10.0.12.2'
@@ -267,6 +270,19 @@ sudo docker exec clab-bgp01-r1 vtysh -c 'clear bgp 10.0.12.2'
 Vei putea observa negocierea TCP și traficul BGP; pentru interpretarea mesajelor BGP OPEN, KEEPALIVE și UPDATE, exportă un PCAP și deschide-l în Wireshark. Închide captura cu `Ctrl+C`.
 
 ## 11. Exerciții și troubleshooting
+
+### Instalarea se oprește: `found debian`
+
+Această eroare aparținea primei versiuni a arhivei, care accepta doar Ubuntu. Versiunea actualizată acceptă Debian și Ubuntu în VM. Înainte de instalare, rulează:
+
+```bash
+cat /etc/os-release | grep -E '^(ID|VERSION_ID)='
+command -v pveversion || true
+systemd-detect-virt
+make preflight
+```
+
+Dacă `pveversion` există, probabil ești conectat la **hostul Proxmox**; nu instala Docker acolo, ci într-o VM. Dacă `make preflight` raportează `PASS`, continuă cu `make install` și `make up`. Dacă rulezi deja o versiune veche clonată de pe GitHub, publică întâi noile fișiere și actualizează local cu `git pull --ff-only`.
 
 ### Exercițiul A — întrerupe legătura
 
@@ -336,6 +352,8 @@ make up
 ```bash
 make lint
 ```
+
+Rulează și `make test-preflight` pentru a testa că scriptul de instalare acceptă un guest și refuză un host Proxmox (fără să instaleze nimic).
 
 Acest test verifică sintaxa scripturilor shell și consistența statică a topologiei YAML/configurațiilor FRR. GitHub Actions execută același test static la `push` și `pull_request`. **Nu este un test de runtime**: verificarea efectivă a BGP se face pe VM-ul tău prin `make up` / `make check`.
 

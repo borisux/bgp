@@ -7,7 +7,7 @@ cd "$ROOT_DIR"
 for cmd in sudo docker containerlab ip nsenter ping grep; do
   if ! command -v "$cmd" >/dev/null 2>&1; then
     printf 'ERROR: required command not found: %s\n' "$cmd" >&2
-    printf 'On Ubuntu 24.04, install host tools with: make install\n' >&2
+    printf 'On a Debian/Ubuntu VM, install host tools with: make install\n' >&2
     exit 1
   fi
 done

@@ -1,9 +1,11 @@
 .DEFAULT_GOAL := help
-.PHONY: help install up check status down logs r1 r2 lint
+.PHONY: help preflight install up check status down logs r1 r2 lint test-preflight
 
 help:
 	@echo 'BGP-01 FRRouting Lab'
-	@echo '  make install  - install Ubuntu host dependencies (Docker + Containerlab)'
+	@echo '  make preflight - check Debian/Ubuntu VM safety without changes'
+	@echo '  make test-preflight - run nonprivileged safety regression tests'
+	@echo '  make install   - install Docker + Containerlab on Debian/Ubuntu VM'
 	@echo '  make up       - deploy lab, wait for eBGP and verify routing'
 	@echo '  make check    - verify eBGP routes and end-to-end loopback ping'
 	@echo '  make status   - list lab nodes'
@@ -12,6 +14,12 @@ help:
 	@echo '  make logs     - show recent container logs'
 	@echo '  make down     - destroy only this lab'
 	@echo '  make lint     - static config and shell checks'
+
+preflight:
+	bash scripts/install-host.sh --check
+
+test-preflight:
+	bash tests/test-preflight.sh
 
 install:
 	bash scripts/install-host.sh
@@ -39,5 +47,5 @@ down:
 	sudo containerlab destroy -t bgp01.clab.yml --cleanup
 
 lint:
-	@for file in check.sh scripts/*.sh; do bash -n "$$file" || exit; done
+	@for file in check.sh scripts/*.sh tests/*.sh; do bash -n "$$file" || exit; done
 	python3 scripts/static_lint.py
