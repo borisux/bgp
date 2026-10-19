@@ -1,0 +1,15 @@
+graph BGP02 {
+  graph [label="LAB 02  |  eBGP multi-homing + LOCAL_PREF", labelloc=t, fontname="DejaVu Sans", fontsize=19,
+         bgcolor="white", pad=0.33, ranksep=1.55, nodesep=1.30, splines=polyline];
+  node [shape=box, style="rounded,filled", fontname="DejaVu Sans", penwidth=1.2, margin=".2,.15", color="#334e68", fillcolor="#eaf2fb", fontsize=12];
+  edge [fontname="DejaVu Sans", color="#537592", fontcolor="#27405a", penwidth=2.0, fontsize=10];
+  ce [label="CE  |  AS 65000\nRouter-ID 192.0.2.1\nPreferă ISP-A (LOCAL_PREF 200)", fillcolor="#e1edfb"];
+  a [label="ISP-A  |  AS 65010\nR1: 10.0.12.2\nR2: 10.0.24.1", fillcolor="#edf8ee"];
+  b [label="ISP-B  |  AS 65020\nR1: 10.0.13.2\nR2: 10.0.34.1", fillcolor="#fff5e8"];
+  origin [label="ORIGIN  |  AS 65030\nAnunță 203.0.113.0/24\nIP test 203.0.113.1/32", fillcolor="#edf0fd"];
+  { rank=same; a; b; }
+  ce -- a [label="CE 10.0.12.1  ↔  10.0.12.2\n10.0.12.0/30"];
+  ce -- b [label="CE 10.0.13.1  ↔  10.0.13.2\n10.0.13.0/30"];
+  a -- origin [label="10.0.24.1  ↔  10.0.24.2\n10.0.24.0/30"];
+  b -- origin [label="10.0.34.1  ↔  10.0.34.2\n10.0.34.0/30"];
+}

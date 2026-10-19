@@ -1,0 +1,36 @@
+# Nokia SR Linux partial CLI configuration, applied by containerlab at deploy
+set / interface system0 subinterface 0 ipv4 address 192.0.2.1/32
+set / network-instance default interface system0.0
+set / interface ethernet-1/1 admin-state enable
+set / interface ethernet-1/1 subinterface 0 admin-state enable
+set / interface ethernet-1/1 subinterface 0 ipv4 admin-state enable
+set / interface ethernet-1/1 subinterface 0 ipv4 address 10.0.12.1/30
+set / network-instance default interface ethernet-1/1.0
+set / interface ethernet-1/2 admin-state enable
+set / interface ethernet-1/2 subinterface 0 admin-state enable
+set / interface ethernet-1/2 subinterface 0 ipv4 admin-state enable
+set / interface ethernet-1/2 subinterface 0 ipv4 address 10.0.13.1/30
+set / network-instance default interface ethernet-1/2.0
+set / network-instance default protocols bgp autonomous-system 65000
+set / network-instance default protocols bgp router-id 192.0.2.1
+set / network-instance default protocols bgp admin-state enable
+set / network-instance default protocols bgp afi-safi ipv4-unicast admin-state enable
+set / routing-policy policy EXPORT-LOCAL default-action policy-result reject
+set / routing-policy policy EXPORT-LOCAL statement allow match protocol local
+set / routing-policy policy EXPORT-LOCAL statement allow action policy-result accept
+set / routing-policy policy PREFER-ISP-A default-action policy-result accept
+set / routing-policy policy PREFER-ISP-A default-action bgp local-preference set 200
+set / routing-policy policy PREFER-ISP-B default-action policy-result accept
+set / routing-policy policy PREFER-ISP-B default-action bgp local-preference set 100
+set / network-instance default protocols bgp group ISP-A export-policy [ EXPORT-LOCAL ]
+set / network-instance default protocols bgp group ISP-A import-policy [ PREFER-ISP-A ]
+set / network-instance default protocols bgp group ISP-A ipv4-unicast admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.12.2 admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.12.2 peer-group ISP-A
+set / network-instance default protocols bgp neighbor 10.0.12.2 peer-as 65010
+set / network-instance default protocols bgp group ISP-B export-policy [ EXPORT-LOCAL ]
+set / network-instance default protocols bgp group ISP-B import-policy [ PREFER-ISP-B ]
+set / network-instance default protocols bgp group ISP-B ipv4-unicast admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.13.2 admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.13.2 peer-group ISP-B
+set / network-instance default protocols bgp neighbor 10.0.13.2 peer-as 65020

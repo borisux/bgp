@@ -1,0 +1,33 @@
+# Nokia SR Linux partial CLI configuration, applied by containerlab at deploy
+set / interface system0 subinterface 0 ipv4 address 10.20.20.20/32
+set / network-instance default interface system0.0
+set / interface ethernet-1/1 admin-state enable
+set / interface ethernet-1/1 subinterface 0 admin-state enable
+set / interface ethernet-1/1 subinterface 0 ipv4 admin-state enable
+set / interface ethernet-1/1 subinterface 0 ipv4 address 10.0.13.2/30
+set / network-instance default interface ethernet-1/1.0
+set / interface ethernet-1/2 admin-state enable
+set / interface ethernet-1/2 subinterface 0 admin-state enable
+set / interface ethernet-1/2 subinterface 0 ipv4 admin-state enable
+set / interface ethernet-1/2 subinterface 0 ipv4 address 10.0.34.1/30
+set / network-instance default interface ethernet-1/2.0
+set / network-instance default protocols bgp autonomous-system 65020
+set / network-instance default protocols bgp router-id 10.20.20.20
+set / network-instance default protocols bgp admin-state enable
+set / network-instance default protocols bgp afi-safi ipv4-unicast admin-state enable
+set / routing-policy policy EXPORT-BGP default-action policy-result reject
+set / routing-policy policy EXPORT-BGP statement allow match protocol bgp
+set / routing-policy policy EXPORT-BGP statement allow action policy-result accept
+set / routing-policy policy IMPORT-ALL default-action policy-result accept
+set / network-instance default protocols bgp group CE export-policy [ EXPORT-BGP ]
+set / network-instance default protocols bgp group CE import-policy [ IMPORT-ALL ]
+set / network-instance default protocols bgp group CE ipv4-unicast admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.13.1 admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.13.1 peer-group CE
+set / network-instance default protocols bgp neighbor 10.0.13.1 peer-as 65000
+set / network-instance default protocols bgp group ORIGIN export-policy [ EXPORT-BGP ]
+set / network-instance default protocols bgp group ORIGIN import-policy [ IMPORT-ALL ]
+set / network-instance default protocols bgp group ORIGIN ipv4-unicast admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.34.2 admin-state enable
+set / network-instance default protocols bgp neighbor 10.0.34.2 peer-group ORIGIN
+set / network-instance default protocols bgp neighbor 10.0.34.2 peer-as 65030

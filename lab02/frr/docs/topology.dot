@@ -1,0 +1,14 @@
+graph BGP02 {
+  graph [bgcolor="white", pad="0.25", nodesep="1.0", ranksep="1.35", splines=polyline];
+  node [shape=box, style="rounded,filled", color="#385976", fillcolor="#e6f1fa", fontname="DejaVu Sans", fontsize=12, margin="0.23,0.17"];
+  edge [fontname="DejaVu Sans", fontsize=10, color="#42617d", penwidth=1.6];
+  ce [label="CE  •  AS 65000\n192.0.2.1/32\nPrefer ISP-A (LOCAL_PREF 200)"];
+  a [label="ISP-A  •  AS 65010"];
+  b [label="ISP-B  •  AS 65020"];
+  origin [label="ORIGIN  •  AS 65030\n203.0.113.0/24", fillcolor="#eaf6eb", color="#528456"];
+  { rank=same; a; b; }
+  ce -- a [label="10.0.12.0/30"];
+  ce -- b [label="10.0.13.0/30"];
+  a -- origin [label="10.0.24.0/30"];
+  b -- origin [label="10.0.34.0/30"];
+}

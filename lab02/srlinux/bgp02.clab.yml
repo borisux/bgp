@@ -1,0 +1,21 @@
+name: bgp02-srl
+
+topology:
+  defaults:
+    kind: nokia_srlinux
+    type: ixr-d3
+    image: ghcr.io/nokia/srlinux:25.10.2
+  nodes:
+    ce:
+      startup-config: configs/ce.cli
+    isp-a:
+      startup-config: configs/isp-a.cli
+    isp-b:
+      startup-config: configs/isp-b.cli
+    origin:
+      startup-config: configs/origin.cli
+  links:
+    - endpoints: ["ce:e1-1", "isp-a:e1-1"]
+    - endpoints: ["ce:e1-2", "isp-b:e1-1"]
+    - endpoints: ["isp-a:e1-2", "origin:e1-1"]
+    - endpoints: ["isp-b:e1-2", "origin:e1-2"]

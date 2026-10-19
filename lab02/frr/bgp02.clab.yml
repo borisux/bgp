@@ -1,0 +1,32 @@
+name: bgp02
+
+topology:
+  kinds:
+    frr:
+      image: quay.io/frrouting/frr:containerlab-10.7.1
+      daemons:
+        - bgpd
+
+  nodes:
+    ce:
+      kind: frr
+      startup-config: ./ce/frr.conf
+      enforce-startup-config: true
+    isp-a:
+      kind: frr
+      startup-config: ./isp-a/frr.conf
+      enforce-startup-config: true
+    isp-b:
+      kind: frr
+      startup-config: ./isp-b/frr.conf
+      enforce-startup-config: true
+    origin:
+      kind: frr
+      startup-config: ./origin/frr.conf
+      enforce-startup-config: true
+
+  links:
+    - endpoints: ['ce:eth1', 'isp-a:eth1']
+    - endpoints: ['ce:eth2', 'isp-b:eth1']
+    - endpoints: ['isp-a:eth2', 'origin:eth1']
+    - endpoints: ['isp-b:eth2', 'origin:eth2']

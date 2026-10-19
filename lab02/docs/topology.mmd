@@ -1,0 +1,9 @@
+flowchart TD
+  CE["CE / AS 65000<br/>192.0.2.1/32<br/>Preferă ISP-A: LOCAL_PREF 200"]
+  A["ISP-A / AS 65010"]
+  B["ISP-B / AS 65020"]
+  ORIGIN["ORIGIN / AS 65030<br/>Origine: 203.0.113.0/24"]
+  CE ---|"10.0.12.0/30"| A
+  CE ---|"10.0.13.0/30"| B
+  A ---|"10.0.24.0/30"| ORIGIN
+  B ---|"10.0.34.0/30"| ORIGIN
