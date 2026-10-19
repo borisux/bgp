@@ -1,0 +1,4 @@
+flowchart LR
+    R1["R1 / FRRouting<br/>AS 65001<br/>eth1 10.0.12.1/30<br/>lo 192.0.2.1/32"]
+    R2["R2 / FRRouting<br/>AS 65002<br/>eth1 10.0.12.2/30<br/>lo 198.51.100.1/32"]
+    R1 <-->|"eBGP / TCP 179"| R2
